@@ -10,6 +10,7 @@ import { AuthService } from "./auth.service";
 import { JwtStrategy } from "./jwt.strategy";
 import { EmailService } from "src/common/utils/email.util";
 import { AuthLink, AuthLinkSchema } from "./schema/authlink.schema";
+import { Patient, PatientSchema } from "src/patient/schema/patient.schema";
 
 @Module({
     imports: [
@@ -26,7 +27,8 @@ import { AuthLink, AuthLinkSchema } from "./schema/authlink.schema";
             { name: User.name, schema: UserSchema },
             { name: Role.name, schema: RoleSchema },
             { name: AuditLog.name, schema: AuditLogSchema },
-            { name: AuthLink.name, schema: AuthLinkSchema }
+            { name: AuthLink.name, schema: AuthLinkSchema },
+            { name: Patient.name, schema: PatientSchema },
         ],
     ),
     ],

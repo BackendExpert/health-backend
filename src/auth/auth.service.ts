@@ -12,6 +12,7 @@ import { Role, RoleDocument } from "src/role/schema/role.schema";
 import { getLocationFromIP } from "../common/utils/location"
 import { AuthLink, AuthLinkDocument } from "./schema/authlink.schema";
 import { CompareAuthToken, GenerateAuthLink } from "src/common/utils/authlink.util";
+import { Patient, PatientDocument } from "src/patient/schema/patient.schema";
 
 @Injectable()
 export class AuthService {
@@ -27,6 +28,9 @@ export class AuthService {
 
         @InjectModel(AuthLink.name)
         private authlinkModel: Model<AuthLinkDocument>,
+
+        @InjectModel(Patient.name)
+        private patientModel: Model<PatientDocument>,
 
         private jwtService: JwtService,
         private emailService: EmailService,
@@ -45,8 +49,6 @@ export class AuthService {
                     "Your Account is Deactive now, Contact Admin"
                 );
             }
-
-            throw new ConflictException("User Already Registed");
         }
 
 
@@ -197,6 +199,22 @@ export class AuthService {
             ipAddress,
             userAgent,
         )
+
+
+        const userRole = (user.role as any)?.role;
+
+        if (userRole === "patient") {
+            const patient = await this.patientModel.findOne({
+                user: user._id,
+            });
+
+            if (!patient) {
+                await this.patientModel.create({
+                    user: user._id,
+                    join_at: new Date(),
+                });
+            }
+        }
 
         return {
             success: true,
