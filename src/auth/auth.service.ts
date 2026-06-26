@@ -174,8 +174,9 @@ export class AuthService {
 
         const accessToken = await this.jwtService.signAsync({
             sub: user._id,
-            email: user.email,
+            user: user.email,
             role: (user.role as any)?.role,
+            type: "LOGIN_TOKEN"
         });
 
         const location = getLocationFromIP(ipAddress || "");

@@ -35,7 +35,10 @@ export class UserService {
         token: string
     ) {
         const payload = await this.jwtService.verify(token)
-        const user = await this.userModel.findOne({ email: payload.user })
+
+        const user = await this.userModel.findOne({
+            email: payload.user,
+        });
 
         if (!user) {
             throw new NotFoundException("The User Not Found")
@@ -76,10 +79,10 @@ export class UserService {
         }
     }
 
-    async UpdateUserRole(
+    async UpdateAccountStatus(
         token: string,
         id: string,
-        role: string,
+        status: string,
         ipAddress?: string,
         userAgent?: string
     ) {
@@ -90,31 +93,23 @@ export class UserService {
             throw new NotFoundException("The User Not Found")
         }
 
-        const checkrole = await this.roleModel.findOne({ role: role })
+        const targetuser = await this.userModel.findById(id)
 
-        if (!checkrole) {
-            throw new NotFoundException("The Given Role cannot find")
+        if (!targetuser) {
+            throw new NotFoundException("Target User Not found")
         }
 
-
-
-        const updatedUser = await this.userModel.findByIdAndUpdate(
+        const updateuser = await this.userModel.findByIdAndUpdate(
             id,
             {
-                role: checkrole._id
-            },
-            { new: true }
-        );
-
-        if (!updatedUser) {
-            throw new NotFoundException("Target user not found");
-        }
-
+                account_stats: status
+            }
+        )
 
         await createAuditLog(this.auditlogModel, {
             user: user._id,
-            action: "USER_ACCOUNT_UPDATED",
-            description: `User Account Role ${updatedUser?.email} Updated by Admin`,
+            action: "USER_ACCOUNT_STATUS_UPDATED",
+            description: `User Account Status ${targetuser?.email} Updated by Admin`,
             ipAddress,
             userAgent,
             metadata: { ipAddress, userAgent }
@@ -122,8 +117,71 @@ export class UserService {
 
         return {
             success: true,
-            message: "User Role Updated Success"
+            message: "Account Status Updated Success"
         }
+    }
+
+    async UpdateUserRole(
+        token: string,
+        id: string,
+        role: string,
+        ipAddress?: string,
+        userAgent?: string,
+    ) {
+        const payload = await this.jwtService.verify(token);
+
+
+        const user = await this.userModel.findOne({
+            email: payload.user,
+        });
+
+        if (!user) {
+            throw new NotFoundException("The User Not Found");
+        }
+
+        const selectedRole = await this.roleModel.findOne({
+            role: role
+        });
+
+        if (!selectedRole) {
+            throw new NotFoundException("The Given Role cannot find");
+        }
+
+        const updatedUser = await this.userModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    role: selectedRole._id,
+                },
+            },
+            {
+                new: true,
+            },
+        );
+
+
+        const checkUser = await this.userModel.findById(id).populate("role");
+
+        await createAuditLog(this.auditlogModel, {
+            user: user._id,
+            action: "USER_ACCOUNT_UPDATED",
+            description: `User Account Role ${updatedUser?.email} Updated by Admin`,
+            ipAddress,
+            userAgent,
+
+            metadata: {
+                role: selectedRole.role,
+                roleId: selectedRole._id,
+                ipAddress,
+                userAgent,
+            },
+        });
+
+
+        return {
+            success: true,
+            message: "User Role Updated Success",
+        };
     }
 
     async FetchAllAuditLogs(

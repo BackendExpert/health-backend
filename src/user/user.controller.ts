@@ -52,9 +52,34 @@ export class UserController {
         )
     }
 
-    @Patch(':id')
+    @Patch("update-account-status/:id")
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @Permissions('user:update')
+    @Permissions('user:update-account-status')
+
+    UpdateUserAccountStatus(
+        @Param('id') id: string,
+        @Body('status') status: string,
+        @Headers("authorization") authHeader: string,
+        @ClientInfoDecorator() client: ClientInfo,
+    ) {
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Invalid or missing token");
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        return this.userService.UpdateAccountStatus(
+            token,
+            id,
+            status,
+            client.ipAddress,
+            client.userAgent
+        )
+    }
+
+    @Patch('update-user-role/:id')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @Permissions('user:update-account-type')
 
     UpdateUserRole(
         @Param('id') id: string,
