@@ -26,6 +26,9 @@ export class Patient {
 
     @Prop({type: String })
     mobile!: string
+    
+    @Prop({type: String, enum: ['male', 'female', 'other'] })
+    gender!: string
 
     @Prop({ required: true, default: new Date() })
     join_at!: Date
